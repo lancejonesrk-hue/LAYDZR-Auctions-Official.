@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "laydzr_auctions",
+  "version": "${version}",
+  "name": "LAYDZR Auctions",
+  "description": "Electric-blue auction HUD and local profit/loss tracker.",
+  "authors": ["LAYDZR"],
+  "environment": "client",
+  "entrypoints": {
+    "client": ["gg.laydzr.auctions.LaydzrAuctionsClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
