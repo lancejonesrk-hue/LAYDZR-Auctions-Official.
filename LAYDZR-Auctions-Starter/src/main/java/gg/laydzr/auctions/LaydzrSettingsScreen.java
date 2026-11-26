@@ -1,32 +1,29 @@
 
 package gg.laydzr.auctions;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.text.Text;
 
 public final class LaydzrSettingsScreen extends Screen {
     private boolean auctionEnabled;
     private boolean profitEnabled;
     private long profitCents;
 
-    private final Screen parent;
     private final LaydzrAuctionsClient.SettingsConsumer consumer;
 
     public LaydzrSettingsScreen(
             boolean auction,
             boolean profit,
             long cents,
-            Screen parent,
             LaydzrAuctionsClient.SettingsConsumer consumer
     ) {
-        super(Component.literal("LAYDZR Auctions Settings"));
+        super(Text.literal("LAYDZR Auctions Settings"));
 
         this.auctionEnabled = auction;
         this.profitEnabled = profit;
         this.profitCents = cents;
-        this.parent = parent;
         this.consumer = consumer;
     }
 
@@ -35,58 +32,56 @@ public final class LaydzrSettingsScreen extends Screen {
         int center = width / 2;
         int top = height / 2 - 70;
 
-        addRenderableWidget(Button.builder(
+        addDrawableChild(ButtonWidget.builder(
                 toggleText("Auction HUD", auctionEnabled),
                 button -> {
                     auctionEnabled = !auctionEnabled;
                     button.setMessage(toggleText("Auction HUD", auctionEnabled));
                     save();
                 }
-        ).bounds(center - 105, top, 210, 20).build());
+        ).dimensions(center - 105, top, 210, 20).build());
 
-        addRenderableWidget(Button.builder(
+        addDrawableChild(ButtonWidget.builder(
                 toggleText("Profit/Loss HUD", profitEnabled),
                 button -> {
                     profitEnabled = !profitEnabled;
                     button.setMessage(toggleText("Profit/Loss HUD", profitEnabled));
                     save();
                 }
-        ).bounds(center - 105, top + 27, 210, 20).build());
+        ).dimensions(center - 105, top + 27, 210, 20).build());
 
-        addRenderableWidget(Button.builder(
-                Component.literal("Add $1,000 profit"),
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal("Add $1,000 profit"),
                 button -> {
                     profitCents += 100000;
                     save();
                 }
-        ).bounds(center - 105, top + 54, 102, 20).build());
+        ).dimensions(center - 105, top + 54, 102, 20).build());
 
-        addRenderableWidget(Button.builder(
-                Component.literal("Record $1,000 loss"),
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal("Record $1,000 loss"),
                 button -> {
                     profitCents -= 100000;
                     save();
                 }
-        ).bounds(center + 3, top + 54, 102, 20).build());
+        ).dimensions(center + 3, top + 54, 102, 20).build());
 
-        addRenderableWidget(Button.builder(
-                Component.literal("Reset total"),
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal("Reset total"),
                 button -> {
                     profitCents = 0;
                     save();
                 }
-        ).bounds(center - 105, top + 81, 210, 20).build());
+        ).dimensions(center - 105, top + 81, 210, 20).build());
 
-        addRenderableWidget(Button.builder(
-                Component.literal("Done"),
-                button -> onClose()
-        ).bounds(center - 105, top + 108, 210, 20).build());
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal("Done"),
+                button -> close()
+        ).dimensions(center - 105, top + 108, 210, 20).build());
     }
 
-    private Component toggleText(String name, boolean enabled) {
-        return Component.literal(
-                name + ": " + (enabled ? "ON" : "OFF")
-        );
+    private Text toggleText(String name, boolean enabled) {
+        return Text.literal(name + ": " + (enabled ? "ON" : "OFF"));
     }
 
     private void save() {
@@ -94,34 +89,25 @@ public final class LaydzrSettingsScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(
-            GuiGraphicsExtractor graphics,
-            int mouseX,
-            int mouseY,
-            float delta
-    ) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        renderBackground(context, mouseX, mouseY, delta);
 
-        graphics.centeredText(
-                font,
+        context.drawCenteredTextWithShadow(
+                textRenderer,
                 title,
                 width / 2,
                 height / 2 - 95,
                 0xFF55DFFF
         );
 
-        graphics.centeredText(
-                font,
-                "Local demo controls - no server auction connection yet",
+        context.drawCenteredTextWithShadow(
+                textRenderer,
+                Text.literal("Local demo controls - no server auction connection yet"),
                 width / 2,
                 height / 2 + 85,
                 0xFFB7DCE8
         );
-    }
 
-    @Override
-    public void onClose() {
-        minecraft.gui.setScreen(parent);
+        super.render(context, mouseX, mouseY, delta);
     }
 }
-
