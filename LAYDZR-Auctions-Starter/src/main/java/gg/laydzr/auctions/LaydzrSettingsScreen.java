@@ -3,7 +3,6 @@ package gg.laydzr.auctions;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
 public final class LaydzrSettingsScreen extends Screen {
@@ -13,6 +12,10 @@ public final class LaydzrSettingsScreen extends Screen {
 
     private final LaydzrAuctionsClient.SettingsConsumer consumer;
 
+    private static final int BLUE = 0xFF28BFEF;
+    private static final int CYAN = 0xFF55DFFF;
+    private static final int WHITE = 0xFFFFFFFF;
+
     public LaydzrSettingsScreen(
             boolean auction,
             boolean profit,
@@ -20,94 +23,155 @@ public final class LaydzrSettingsScreen extends Screen {
             LaydzrAuctionsClient.SettingsConsumer consumer
     ) {
         super(Text.literal("LAYDZR Auctions Settings"));
-
         this.auctionEnabled = auction;
         this.profitEnabled = profit;
         this.profitCents = cents;
         this.consumer = consumer;
     }
 
-    @Override
-    protected void init() {
-        int center = width / 2;
-        int top = height / 2 - 70;
-
-        addDrawableChild(ButtonWidget.builder(
-                toggleText("Auction HUD", auctionEnabled),
-                button -> {
-                    auctionEnabled = !auctionEnabled;
-                    button.setMessage(toggleText("Auction HUD", auctionEnabled));
-                    save();
-                }
-        ).dimensions(center - 105, top, 210, 20).build());
-
-        addDrawableChild(ButtonWidget.builder(
-                toggleText("Profit/Loss HUD", profitEnabled),
-                button -> {
-                    profitEnabled = !profitEnabled;
-                    button.setMessage(toggleText("Profit/Loss HUD", profitEnabled));
-                    save();
-                }
-        ).dimensions(center - 105, top + 27, 210, 20).build());
-
-        addDrawableChild(ButtonWidget.builder(
-                Text.literal("Add $1,000 profit"),
-                button -> {
-                    profitCents += 100000;
-                    save();
-                }
-        ).dimensions(center - 105, top + 54, 102, 20).build());
-
-        addDrawableChild(ButtonWidget.builder(
-                Text.literal("Record $1,000 loss"),
-                button -> {
-                    profitCents -= 100000;
-                    save();
-                }
-        ).dimensions(center + 3, top + 54, 102, 20).build());
-
-        addDrawableChild(ButtonWidget.builder(
-                Text.literal("Reset total"),
-                button -> {
-                    profitCents = 0;
-                    save();
-                }
-        ).dimensions(center - 105, top + 81, 210, 20).build());
-
-        addDrawableChild(ButtonWidget.builder(
-                Text.literal("Done"),
-                button -> close()
-        ).dimensions(center - 105, top + 108, 210, 20).build());
+    private int center() {
+        return width / 2;
     }
 
-    private Text toggleText(String name, boolean enabled) {
-        return Text.literal(name + ": " + (enabled ? "ON" : "OFF"));
-    }
-
-    private void save() {
-        consumer.accept(auctionEnabled, profitEnabled, profitCents);
+    private int top() {
+        return height / 2 - 85;
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         renderBackground(context, mouseX, mouseY, delta);
 
+        int cx = center();
+        int y = top();
+
+        // Main panel
+        context.fill(cx - 155, y - 15, cx + 155, y + 190, 0xF0101928);
+        context.fill(cx - 155, y - 15, cx + 155, y - 12, BLUE);
+        context.fill(cx - 155, y - 15, cx - 152, y + 190, BLUE);
+        context.fill(cx + 152, y - 15, cx + 155, y + 190, BLUE);
+        context.fill(cx - 155, y + 187, cx + 155, y + 190, BLUE);
+
         context.drawCenteredTextWithShadow(
                 textRenderer,
-                title,
-                width / 2,
-                height / 2 - 95,
-                0xFF55DFFF
+                Text.literal("LAYDZR AUCTIONS"),
+                cx, y, CYAN
         );
 
         context.drawCenteredTextWithShadow(
                 textRenderer,
-                Text.literal("Local demo controls - no server auction connection yet"),
-                width / 2,
-                height / 2 + 85,
-                0xFFB7DCE8
+                Text.literal("SETTINGS"),
+                cx, y + 20, WHITE
+        );
+
+        drawButton(context, cx - 110, y + 48, 220, 24,
+                "Auction HUD: " + (auctionEnabled ? "ON" : "OFF"), mouseX, mouseY);
+
+        drawButton(context, cx - 110, y + 79, 220, 24,
+                "Profit/Loss HUD: " + (profitEnabled ? "ON" : "OFF"), mouseX, mouseY);
+
+        drawButton(context, cx - 110, y + 110, 105, 24,
+                "+$1,000 PROFIT", mouseX, mouseY);
+
+        drawButton(context, cx + 5, y + 110, 105, 24,
+                "-$1,000 LOSS", mouseX, mouseY);
+
+        drawButton(context, cx - 110, y + 141, 220, 24,
+                "RESET TOTAL", mouseX, mouseY);
+
+        drawButton(context, cx - 110, y + 172, 220, 24,
+                "DONE", mouseX, mouseY);
+
+        context.drawCenteredTextWithShadow(
+                textRenderer,
+                Text.literal("Total: $" + String.format("%,.2f", profitCents / 100.0)),
+                cx, y + 204, CYAN
         );
 
         super.render(context, mouseX, mouseY, delta);
+    }
+
+    private void drawButton(
+            DrawContext context,
+            int x, int y, int w, int h,
+            String label,
+            int mouseX, int mouseY
+    ) {
+        boolean hovered = mouseX >= x && mouseX <= x + w
+                && mouseY >= y && mouseY <= y + h;
+
+        context.fill(x, y, x + w, y + h,
+                hovered ? 0xFF174B68 : 0xFF142638);
+
+        context.fill(x, y, x + w, y + 2, BLUE);
+        context.fill(x, y + h - 2, x + w, y + h, BLUE);
+        context.fill(x, y, x + 2, y + h, BLUE);
+        context.fill(x + w - 2, y, x + w, y + h, BLUE);
+
+        context.drawCenteredTextWithShadow(
+                textRenderer,
+                Text.literal(label),
+                x + w / 2,
+                y + 8,
+                WHITE
+        );
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button != 0) {
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+        int cx = center();
+        int y = top();
+
+        if (inside(mouseX, mouseY, cx - 110, y + 48, 220, 24)) {
+            auctionEnabled = !auctionEnabled;
+            save();
+            return true;
+        }
+
+        if (inside(mouseX, mouseY, cx - 110, y + 79, 220, 24)) {
+            profitEnabled = !profitEnabled;
+            save();
+            return true;
+        }
+
+        if (inside(mouseX, mouseY, cx - 110, y + 110, 105, 24)) {
+            profitCents += 100000;
+            save();
+            return true;
+        }
+
+        if (inside(mouseX, mouseY, cx + 5, y + 110, 105, 24)) {
+            profitCents -= 100000;
+            save();
+            return true;
+        }
+
+        if (inside(mouseX, mouseY, cx - 110, y + 141, 220, 24)) {
+            profitCents = 0;
+            save();
+            return true;
+        }
+
+        if (inside(mouseX, mouseY, cx - 110, y + 172, 220, 24)) {
+            close();
+            return true;
+        }
+
+        return true;
+    }
+
+    private boolean inside(
+            double mouseX, double mouseY,
+            int x, int y, int w, int h
+    ) {
+        return mouseX >= x && mouseX <= x + w
+                && mouseY >= y && mouseY <= y + h;
+    }
+
+    private void save() {
+        consumer.accept(auctionEnabled, profitEnabled, profitCents);
     }
 }
