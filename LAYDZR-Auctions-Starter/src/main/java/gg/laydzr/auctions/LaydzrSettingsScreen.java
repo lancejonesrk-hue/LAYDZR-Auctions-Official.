@@ -1,6 +1,7 @@
 
 package gg.laydzr.auctions;
 
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -34,7 +35,7 @@ public final class LaydzrSettingsScreen extends Screen {
     }
 
     private int top() {
-        return height / 2 - 85;
+        return height / 2 - 100;
     }
 
     @Override
@@ -44,22 +45,19 @@ public final class LaydzrSettingsScreen extends Screen {
         int cx = center();
         int y = top();
 
-        // Main panel
-        context.fill(cx - 155, y - 15, cx + 155, y + 190, 0xF0101928);
+        context.fill(cx - 155, y - 15, cx + 155, y + 215, 0xF0101928);
         context.fill(cx - 155, y - 15, cx + 155, y - 12, BLUE);
-        context.fill(cx - 155, y - 15, cx - 152, y + 190, BLUE);
-        context.fill(cx + 152, y - 15, cx + 155, y + 190, BLUE);
-        context.fill(cx - 155, y + 187, cx + 155, y + 190, BLUE);
+        context.fill(cx - 155, y - 15, cx - 152, y + 215, BLUE);
+        context.fill(cx + 152, y - 15, cx + 155, y + 215, BLUE);
+        context.fill(cx - 155, y + 212, cx + 155, y + 215, BLUE);
 
         context.drawCenteredTextWithShadow(
-                textRenderer,
-                Text.literal("LAYDZR AUCTIONS"),
+                textRenderer, Text.literal("LAYDZR AUCTIONS"),
                 cx, y, CYAN
         );
 
         context.drawCenteredTextWithShadow(
-                textRenderer,
-                Text.literal("SETTINGS"),
+                textRenderer, Text.literal("SETTINGS"),
                 cx, y + 20, WHITE
         );
 
@@ -117,10 +115,13 @@ public final class LaydzrSettingsScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button != 0) {
-            return super.mouseClicked(mouseX, mouseY, button);
+    public boolean mouseClicked(Click click, boolean doubled) {
+        if (click.button() != 0) {
+            return super.mouseClicked(click, doubled);
         }
+
+        double mouseX = click.x();
+        double mouseY = click.y();
 
         int cx = center();
         int y = top();
