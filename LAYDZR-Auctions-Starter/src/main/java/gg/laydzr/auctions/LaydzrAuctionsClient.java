@@ -1,19 +1,19 @@
 
 package gg.laydzr.auctions;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.text.Text;
+import org.lwjgl.glfw.GLFW;
 
 public final class LaydzrAuctionsClient implements ClientModInitializer {
-    private static KeyMapping openSettings;
+    private static KeyBinding openSettings;
 
     private static boolean auctionHudEnabled = true;
     private static boolean profitHudEnabled = true;
@@ -24,26 +24,19 @@ public final class LaydzrAuctionsClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        KeyMapping.Category category = KeyMapping.Category.register(
-                Identifier.fromNamespaceAndPath("laydzr_auctions", "main")
-        );
-
-        openSettings = KeyMappingHelper.registerKeyMapping(
-                new KeyMapping(
-                        "key.laydzr_auctions.settings",
-                        InputConstants.Type.KEYSYM,
-                        InputConstants.KEY_L,
-                        category
-                )
-        );
+        openSettings = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.laydzr_auctions.settings",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_L,
+                KeyBinding.Category.MISC
+        ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (openSettings.consumeClick()) {
-                client.gui.setScreen(new LaydzrSettingsScreen(
+            while (openSettings.wasPressed()) {
+                client.setScreen(new LaydzrSettingsScreen(
                         auctionHudEnabled,
                         profitHudEnabled,
                         profitCents,
-                        client.gui.screen(),
                         (auction, profit, cents) -> {
                             auctionHudEnabled = auction;
                             profitHudEnabled = profit;
@@ -53,14 +46,13 @@ public final class LaydzrAuctionsClient implements ClientModInitializer {
             }
         });
 
-        HudElementRegistry.addLast(
-                Identifier.fromNamespaceAndPath("laydzr_auctions", "main_hud"),
-                (graphics, deltaTracker) -> renderHud(graphics)
-        );
+        HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
+            renderHud(drawContext);
+        });
     }
 
-    private static void renderHud(GuiGraphicsExtractor graphics) {
-        Minecraft client = Minecraft.getInstance();
+    private static void renderHud(DrawContext context) {
+        MinecraftClient client = MinecraftClient.getInstance();
 
         if (client.player == null) return;
 
@@ -68,19 +60,21 @@ public final class LaydzrAuctionsClient implements ClientModInitializer {
         int y = 18;
 
         if (auctionHudEnabled) {
-            drawPanel(graphics, x, y, 184, 38);
+            drawPanel(context, x, y, 184, 38);
 
-            graphics.text(client.font, "LAYDZR / AUCTIONS",
+            context.drawText(client.textRenderer,
+                    Text.literal("LAYDZR / AUCTIONS"),
                     x + 10, y + 7, CYAN, false);
 
-            graphics.text(client.font, "Press L to configure",
+            context.drawText(client.textRenderer,
+                    Text.literal("Press L to configure"),
                     x + 10, y + 21, 0xFFB7DCE8, false);
 
             y += 46;
         }
 
         if (profitHudEnabled) {
-            drawPanel(graphics, x, y, 184, 34);
+            drawPanel(context, x, y, 184, 34);
 
             String amount = String.format(
                     "$%,.2f", Math.abs(profitCents) / 100.0
@@ -88,12 +82,12 @@ public final class LaydzrAuctionsClient implements ClientModInitializer {
 
             boolean positive = profitCents >= 0;
 
-            graphics.text(client.font,
-                    "TOTAL " + (positive ? "PROFIT" : "LOSS"),
+            context.drawText(client.textRenderer,
+                    Text.literal("TOTAL " + (positive ? "PROFIT" : "LOSS")),
                     x + 10, y + 5, CYAN, false);
 
-            graphics.text(client.font,
-                    (positive ? "+" : "-") + amount,
+            context.drawText(client.textRenderer,
+                    Text.literal((positive ? "+" : "-") + amount),
                     x + 10, y + 18,
                     positive ? 0xFF55E39A : 0xFFFF626E,
                     false);
@@ -101,18 +95,17 @@ public final class LaydzrAuctionsClient implements ClientModInitializer {
     }
 
     private static void drawPanel(
-            GuiGraphicsExtractor graphics,
+            DrawContext context,
             int x, int y, int width, int height
     ) {
-        graphics.fill(x, y, x + width, y + height, 0xD9101924);
-        graphics.fill(x, y, x + width, y + 2, BLUE);
-        graphics.fill(x, y + height - 2, x + width, y + height, BLUE);
-        graphics.fill(x, y, x + 2, y + height, BLUE);
-        graphics.fill(x + width - 2, y, x + width, y + height, BLUE);
+        context.fill(x, y, x + width, y + height, 0xD9101924);
+        context.fill(x, y, x + width, y + 2, BLUE);
+        context.fill(x, y + height - 2, x + width, y + height, BLUE);
+        context.fill(x, y, x + 2, y + height, BLUE);
+        context.fill(x + width - 2, y, x + width, y + height, BLUE);
     }
 
     interface SettingsConsumer {
         void accept(boolean auction, boolean profit, long cents);
     }
 }
-
