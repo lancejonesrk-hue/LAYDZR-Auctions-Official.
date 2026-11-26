@@ -4,12 +4,13 @@ package gg.laydzr.auctions;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public final class LaydzrAuctionsClient implements ClientModInitializer {
@@ -46,9 +47,10 @@ public final class LaydzrAuctionsClient implements ClientModInitializer {
             }
         });
 
-        HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
-            renderHud(drawContext);
-        });
+        HudElementRegistry.addLast(
+                Identifier.of("laydzr_auctions", "main_hud"),
+                (context, tickCounter) -> renderHud(context)
+        );
     }
 
     private static void renderHud(DrawContext context) {
